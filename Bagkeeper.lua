@@ -1156,8 +1156,9 @@ function View:Layout(warm)
         run.full = run.label .. " |cff8f8275" .. #run.list .. "|r"
         local nameW = NameWidth(run.full)
         if x > 0 then
-            -- the next category goes beside this one only if its name fits there too
-            if db.newRow or x + m.CG + max(S, nameW) > width + 0.5 then NextRow(true)
+            -- the next category goes beside this one only if its name fits there too; empty slots
+            -- always start on a row of their own, below the items
+            if db.newRow or run.quiet or x + m.CG + max(S, nameW) > width + 0.5 then NextRow(true)
             else x = x + m.CG end
         end
         local seg
