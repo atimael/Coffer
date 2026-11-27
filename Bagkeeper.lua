@@ -1148,8 +1148,10 @@ function View:Layout(warm)
     end
     local places, segs, rowTop = {}, {}, { [0] = 0 }
     local x, row = 0, 0
-    local function NextRow(gap)
-        rowTop[row + 1] = rowTop[row] + m.rowH + (gap and m.CG or 0)
+    -- every row break gets the category gap, so categories are as far apart vertically as they
+    -- are side by side (a category wrapping onto the next row ends up under another one)
+    local function NextRow()
+        rowTop[row + 1] = rowTop[row] + m.rowH + m.CG
         x, row = 0, row + 1
     end
     for ri, run in ipairs(runs) do
@@ -1158,13 +1160,13 @@ function View:Layout(warm)
         if x > 0 then
             -- the next category goes beside this one only if its name fits there too; empty slots
             -- always start on a row of their own, below the items
-            if db.newRow or run.quiet or x + m.CG + max(S, nameW) > width + 0.5 then NextRow(true)
+            if db.newRow or run.quiet or x + m.CG + max(S, nameW) > width + 0.5 then NextRow()
             else x = x + m.CG end
         end
         local seg
         for i, e in ipairs(run.list) do
             if x + S > width + 0.5 then
-                NextRow(i == 1)
+                NextRow()
                 seg = nil
             end
             if not seg then
