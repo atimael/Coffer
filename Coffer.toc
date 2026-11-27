@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: Coffer
+## Notes: Category bags in a fixed-size window that never jumps around, styled like FlareUI.
+## Version: 0.1.0
+## SavedVariables: CofferDB
+## OptionalDeps: FlareUI
+## IconTexture: Interface\Icons\INV_Misc_Bag_10
+## AddonCompartmentFunc: Coffer_OpenSettings
+
+Coffer.lua
