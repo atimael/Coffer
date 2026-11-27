@@ -1,4 +1,4 @@
-# Coffer
+# Bagkeeper
 
 A bag addon for **WoW Forever**. It sorts your bags into categories in one window that keeps its size, styled like FlareUI.
 
@@ -15,12 +15,12 @@ A bag addon for **WoW Forever**. It sorts your bags into categories in one windo
 - **Also:** search, item levels on gear, and rarity-colored borders.
 
 ## Install
-Put the `Coffer` folder in `World of Warcraft\_forever_\Interface\AddOns\`, so the path is `AddOns\Coffer\Coffer.toc`. Turn off other bag addons, such as Baganator.
+Put the `Bagkeeper` folder in `World of Warcraft\_forever_\Interface\AddOns\`, so the path is `AddOns\Bagkeeper\Bagkeeper.toc`. Turn off other bag addons, such as Baganator.
 
 ## Use
-- **B** opens your bags.
-- `/coffer config` (or the gear icon) opens the settings.
-- `/coffer bank` shows your saved bank anywhere.
+- **B**, `/bagkeeper` or `/bk` opens your bags.
+- `/bagkeeper config` (or the gear icon) opens the settings.
+- `/bagkeeper bank` shows your saved bank anywhere.
 
 FlareUI is optional. Without it, the FlareUI theme uses plain borders.
 

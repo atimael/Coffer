@@ -1,7 +1,7 @@
 local ADDON_NAME = ...
 
 --------------------------------------------------
--- COFFER
+-- BAGKEEPER
 -- Bag and bank windows, items grouped by category, in four looks: FlareUI, Forever, Modern and
 -- Blizzard.
 -- No scrolling and no jumping: categories flow one after another through a single grid with a small
@@ -150,9 +150,9 @@ local function FillDefaults(target, defaults)
 end
 
 local function LoadDB()
-    if type(CofferDB) ~= "table" then CofferDB = {} end
-    FillDefaults(CofferDB, DEFAULTS)
-    db = CofferDB
+    if type(BagkeeperDB) ~= "table" then BagkeeperDB = {} end
+    FillDefaults(BagkeeperDB, DEFAULTS)
+    db = BagkeeperDB
     db.columns = floor(max(MIN_COLS, min(MAX_COLS, db.columns)))
     db.iconSize = floor(max(24, min(56, db.iconSize)))
     db.scale = max(0.6, min(1.5, db.scale))
@@ -239,7 +239,7 @@ local function BankList()
     return list
 end
 
--- the bags whose Blizzard windows Coffer replaces
+-- the bags whose Blizzard windows Bagkeeper replaces
 local OWN_BAGS = {}
 for bag = 0, NUM_BAGS do OWN_BAGS[bag] = true end
 if REAGENT then OWN_BAGS[REAGENT] = true end
@@ -393,35 +393,35 @@ end
 
 local function FreeTip(b)
     GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
-    GameTooltip:SetText(b.cofferFreeLabel)
-    GameTooltip:AddLine(("%d free"):format(b.cofferFreeCount), 1, 1, 1)
-    if not b.cofferCached then
+    GameTooltip:SetText(b.bagkeeperFreeLabel)
+    GameTooltip:AddLine(("%d free"):format(b.bagkeeperFreeCount), 1, 1, 1)
+    if not b.bagkeeperCached then
         GameTooltip:AddLine("Drop an item here to put it in this bag.", P.warmGrey[1], P.warmGrey[2], P.warmGrey[3], true)
     end
     GameTooltip:Show()
 end
 
 local function SkinButton(b)
-    if b.cofferSkinned then return end
-    b.cofferSkinned = true
+    if b.bagkeeperSkinned then return end
+    b.bagkeeperSkinned = true
     b:SetSize(SLOT, SLOT)
-    b.cofferIcon = b.icon or b.Icon or (b.GetItemButtonIconTexture and b:GetItemButtonIconTexture())
+    b.bagkeeperIcon = b.icon or b.Icon or (b.GetItemButtonIconTexture and b:GetItemButtonIconTexture())
     -- the slot's own ground, seen when it is empty
-    b.cofferBg = b:CreateTexture(nil, "BACKGROUND", nil, -2)
-    b.cofferBg:SetAllPoints()
+    b.bagkeeperBg = b:CreateTexture(nil, "BACKGROUND", nil, -2)
+    b.bagkeeperBg:SetAllPoints()
     -- the rim, on an overlay so it draws over the icon
     local ov = CreateFrame("Frame", nil, b)
     ov:SetAllPoints()
     ov:SetFrameLevel(b:GetFrameLevel() + 2)
-    b.cofferRim = CreateFrame("Frame", nil, ov, "BackdropTemplate")
+    b.bagkeeperRim = CreateFrame("Frame", nil, ov, "BackdropTemplate")
     local ilvl = ov:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
     ilvl:SetPoint("BOTTOMLEFT", 3, 3)
-    b.cofferLevel = ilvl
+    b.bagkeeperLevel = ilvl
     local free = ov:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     free:SetPoint("CENTER")
     free:SetTextColor(P.bronze5[1], P.bronze5[2], P.bronze5[3])
     free:Hide()
-    b.cofferFree = free
+    b.bagkeeperFree = free
     -- New items: a soft pink glow that breathes, until the window closes. Pink is no item quality,
     -- quest or junk colour, so it never reads as one.
     local glow = ov:CreateTexture(nil, "OVERLAY", nil, 2)
@@ -439,16 +439,16 @@ local function SkinButton(b)
     fade:SetToAlpha(0.35)
     fade:SetDuration(0.9)
     fade:SetSmoothing("IN_OUT")
-    b.cofferNew, b.cofferPulse = glow, pulse
+    b.bagkeeperNew, b.bagkeeperPulse = glow, pulse
     if b.UpdateNewItem then hooksecurefunc(b, "UpdateNewItem", HideBlizzardNew) end
     b:HookScript("OnShow", HideBlizzardNew)
     b:HookScript("OnHide", function(self)
-        if self.cofferPulse:IsPlaying() then self.cofferPulse:Stop() end
-        self.cofferNew:Hide()
+        if self.bagkeeperPulse:IsPlaying() then self.bagkeeperPulse:Stop() end
+        self.bagkeeperNew:Hide()
         if GameTooltip:IsOwned(self) then GameTooltip:Hide() end
     end)
     b:HookScript("OnEnter", function(self)
-        if self.cofferBankSlot then
+        if self.bagkeeperBankSlot then
             -- a bank bag slot with no bag in it
             if not C_Container.GetContainerItemInfo(self:GetBagID(), self:GetID()) then
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -456,7 +456,7 @@ local function SkinButton(b)
                 GameTooltip:AddLine("Drag a bag here to use it in your bank.", 1, 1, 1, true)
                 GameTooltip:Show()
             end
-        elseif self.cofferFreeCount and not self.cofferCached then
+        elseif self.bagkeeperFreeCount and not self.bagkeeperCached then
             FreeTip(self)
         end
     end)
@@ -464,8 +464,8 @@ end
 
 -- a slot's look for the theme: rim, flat or Blizzard's own
 local function ApplySlotStyle(b, style)
-    b.cofferStyle = style
-    local rim, icon, bg = b.cofferRim, b.cofferIcon, b.cofferBg
+    b.bagkeeperStyle = style
+    local rim, icon, bg = b.bagkeeperRim, b.bagkeeperIcon, b.bagkeeperBg
     if style == "blizzard" then
         rim:Hide()
         bg:SetAtlas("bags-item-slot64")
@@ -501,19 +501,19 @@ end
 -- a saved bank item, away from the banker: a picture with its tooltip; shift-click links it
 local function NewCachedButton(parent)
     local b = CreateFrame("ItemButton", nil, parent)
-    b.cofferCached = true
+    b.bagkeeperCached = true
     SkinButton(b)
     b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     b:SetScript("OnEnter", function(self)
-        if self.cofferFreeCount then FreeTip(self) return end
-        if not self.cofferLink then return end
+        if self.bagkeeperFreeCount then FreeTip(self) return end
+        if not self.bagkeeperLink then return end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetHyperlink(self.cofferLink)
+        GameTooltip:SetHyperlink(self.bagkeeperLink)
         GameTooltip:Show()
     end)
     b:SetScript("OnLeave", function() GameTooltip:Hide() end)
     b:SetScript("OnClick", function(self)
-        if self.cofferLink and IsModifiedClick() then HandleModifiedItemClick(self.cofferLink) end
+        if self.bagkeeperLink and IsModifiedClick() then HandleModifiedItemClick(self.bagkeeperLink) end
     end)
     b:Hide()
     return b
@@ -532,7 +532,7 @@ local function Holder(list, parent, bag)
 end
 
 local function ItemLevelText(b, entry)
-    local fs = b.cofferLevel
+    local fs = b.bagkeeperLevel
     if not (db.itemLevel and GetDetailedItemLevelInfo and entry and (entry.classID == CLASS.Weapon or entry.classID == CLASS.Armor)
         and entry.info and entry.info.hyperlink) then
         fs:Hide()
@@ -548,18 +548,18 @@ end
 
 local function Dress(b, info, entry)
     local t = Theme()
-    if b.cofferStyle ~= t.slot then ApplySlotStyle(b, t.slot) end
+    if b.bagkeeperStyle ~= t.slot then ApplySlotStyle(b, t.slot) end
     local normal = b:GetNormalTexture()
     if t.slot == "blizzard" then
         -- Blizzard's slot frame and quality glow, as its own bags have them
         if b.IconBorder then b.IconBorder:SetAlpha(db.rarity and info and (info.quality or 0) >= 2 and 1 or 0) end
         if normal then normal:SetAlpha(1) end
-        if b.cofferIcon then b.cofferIcon:SetTexCoord(0, 1, 0, 1) end
+        if b.bagkeeperIcon then b.bagkeeperIcon:SetTexCoord(0, 1, 0, 1) end
     else
-        -- Coffer's rim replaces Blizzard's quality glow and slot frame
+        -- Bagkeeper's rim replaces Blizzard's quality glow and slot frame
         if b.IconBorder then b.IconBorder:SetAlpha(0) end
         if normal then normal:SetAlpha(0) end
-        if b.cofferIcon then b.cofferIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93) end
+        if b.bagkeeperIcon then b.bagkeeperIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93) end
         local quality = info and info.quality
         local base = t.slot == "flat" and P.bronze2 or P.bronze3
         local r, g, bl, a = base[1], base[2], base[3], 1
@@ -568,15 +568,15 @@ local function Dress(b, info, entry)
         elseif not info then
             a = 0.55   -- empty slots: a quieter rim
         end
-        b.cofferRim:SetBackdropBorderColor(r, g, bl, a)
+        b.bagkeeperRim:SetBackdropBorderColor(r, g, bl, a)
     end
     ItemLevelText(b, entry)
     local isNew = entry and entry.isNew or false
-    b.cofferNew:SetShown(isNew)
+    b.bagkeeperNew:SetShown(isNew)
     if isNew then
-        if not b.cofferPulse:IsPlaying() then b.cofferPulse:Play() end
-    elseif b.cofferPulse:IsPlaying() then
-        b.cofferPulse:Stop()
+        if not b.bagkeeperPulse:IsPlaying() then b.bagkeeperPulse:Play() end
+    elseif b.bagkeeperPulse:IsPlaying() then
+        b.bagkeeperPulse:Stop()
     end
 end
 
@@ -599,7 +599,7 @@ local function FillItem(b, info)
     end
     if not info and b.IconOverlay then b.IconOverlay:Hide() end
     if b.IconBorder and not (info and info.quality) then b.IconBorder:Hide() end
-    if b.cofferIcon then b.cofferIcon:SetVertexColor(1, 1, 1) end
+    if b.bagkeeperIcon then b.bagkeeperIcon:SetVertexColor(1, 1, 1) end
     HideBlizzardNew(b)
 end
 
@@ -622,7 +622,7 @@ local function FillLive(b, info, entry)
 end
 
 local function FillCached(b, info, entry)
-    b.cofferLink = info and info.hyperlink
+    b.bagkeeperLink = info and info.hyperlink
     FillItem(b, info)
     Dress(b, info, entry)
 end
@@ -700,11 +700,11 @@ local function BuildSkin(f)
         s.blizz = blizz
         blizzOK = true
     end
-    f.cofferSkin = s
+    f.bagkeeperSkin = s
 end
 
 local function ApplySkin(f)
-    local s, t = f.cofferSkin, Theme()
+    local s, t = f.bagkeeperSkin, Theme()
     if t.border then
         f:SetBackdrop({ edgeFile = t.border.file, edgeSize = t.border.edge })
         f:SetBackdropBorderColor(t.borderColor[1], t.borderColor[2], t.borderColor[3], 1)
@@ -829,7 +829,7 @@ local function GearButton(parent)
     b.icon:SetTexture(GEAR)
     b:SetScript("OnEnter", function(self)
         PaintGear(self, true)
-        ShowTip(self, "Coffer settings", "ANCHOR_BOTTOM")
+        ShowTip(self, "Bagkeeper settings", "ANCHOR_BOTTOM")
     end)
     b:SetScript("OnLeave", function(self)
         PaintGear(self, false)
@@ -1072,11 +1072,11 @@ function View:RefreshInPlace(data)
         local bag, slot = b:GetBagID(), b:GetID()
         local e = entries[bag] and entries[bag][slot]
         FillLive(b, e and e.info, e)
-        b.cofferFreeCount = nil
+        b.bagkeeperFreeCount = nil
         for _, tile in ipairs(data.tiles) do
-            if not e and tile.key == b.cofferFamily then b.cofferFreeCount = tile.count end
+            if not e and tile.key == b.bagkeeperFamily then b.bagkeeperFreeCount = tile.count end
         end
-        b.cofferFree:SetText(b.cofferFreeCount or "")
+        b.bagkeeperFree:SetText(b.bagkeeperFreeCount or "")
     end
     if self.RefreshBankSlots then self:RefreshBankSlots() end
     self:RefreshFooter(data)
@@ -1268,8 +1268,8 @@ function View:Layout(warm)
             b:SetScale(scale)
             b:ClearAllPoints()
             b:SetPoint("TOPLEFT", self.grid, "TOPLEFT", p.x / scale, -(rowTop[p.row] + L) / scale)
-            b.cofferFreeCount = nil
-            b.cofferFree:Hide()
+            b.bagkeeperFreeCount = nil
+            b.bagkeeperFree:Hide()
             b:Show()
             self:FillButton(b, p.e.info, p.e)
             self.shown[b] = p.e
@@ -1297,11 +1297,11 @@ function View:Layout(warm)
             if b then
                 PlaceFooter(b)
                 self:FillButton(b, nil, { live = data.live })
-                b.cofferFamily = g.key
-                b.cofferFreeCount = g.count
-                b.cofferFreeLabel = g.key == 0 and "Free slots" or g.key == "reagent" and "Crafting bag" or "Special bag"
-                b.cofferFree:SetText(g.count)
-                b.cofferFree:Show()
+                b.bagkeeperFamily = g.key
+                b.bagkeeperFreeCount = g.count
+                b.bagkeeperFreeLabel = g.key == 0 and "Free slots" or g.key == "reagent" and "Crafting bag" or "Special bag"
+                b.bagkeeperFree:SetText(g.count)
+                b.bagkeeperFree:Show()
                 self.shownTiles[#self.shownTiles + 1] = b
             end
         end
@@ -1339,7 +1339,7 @@ end
 function View:RefreshCooldowns()
     if not self.frame:IsVisible() then return end
     for b, entry in pairs(self.shown) do
-        if entry.live and not entry.empty then Try(b, "UpdateCooldown", b.cofferIcon and b.cofferIcon:GetTexture()) end
+        if entry.live and not entry.empty then Try(b, "UpdateCooldown", b.bagkeeperIcon and b.bagkeeperIcon:GetTexture()) end
     end
 end
 
@@ -1387,8 +1387,8 @@ function View:Closed()
     if self.search:GetText() ~= "" then self.search:SetText("") end
     self:MarkSeen(self:Collect())
     for b in pairs(self.shown) do
-        if b.cofferPulse:IsPlaying() then b.cofferPulse:Stop() end
-        b.cofferNew:Hide()
+        if b.bagkeeperPulse:IsPlaying() then b.bagkeeperPulse:Stop() end
+        b.bagkeeperNew:Hide()
     end
     if self.OnHide then self:OnHide() end
 end
@@ -1556,7 +1556,7 @@ local function CloseBlizzardBags()
 end
 
 local function BuildBagWindow()
-    bags = CreateView("CofferFrame", "Bags", db)
+    bags = CreateView("BagkeeperFrame", "Bags", db)
     bags.maxTiles = NUM_BAGS + 1 + (REAGENT and 1 or 0)
 
     function bags:Prepare() self:EnsureLiveButtons(BagList()) end
@@ -1695,7 +1695,7 @@ local function Ago(t)
 end
 
 local function BuildBankWindow()
-    bank = CreateView("CofferBankFrame", "Bank", db.bankWindow)
+    bank = CreateView("BagkeeperBankFrame", "Bank", db.bankWindow)
     bank.pool, bank.poolUsed = {}, 0
     bank.maxLead, bank.maxTiles = 8, 9
     function bank:ModeChanged() return (self.laidOutLive == true) ~= bankOpen end
@@ -1714,7 +1714,7 @@ local function BuildBankWindow()
         local saved = db.banks[CharacterKey()]
         if type(saved) ~= "table" or (not saved.items and not saved.total) then
             self.emptyMessage = bankOpen and "Waiting for bank data."
-                or "Coffer hasn't seen your bank yet. Visit a banker once and it will remember what's inside."
+                or "Bagkeeper hasn't seen your bank yet. Visit a banker once and it will remember what's inside."
             self.minRows = 2
             return data
         end
@@ -1807,13 +1807,13 @@ local function BuildBankWindow()
         SkinButton(b)
         b:SetAttribute("overrideBankType", BANK_TYPE)
         if SetItemButtonTexture then pcall(SetItemButtonTexture, b, "Interface\\Icons\\INV_Misc_Bag_10") end
-        if b.cofferIcon then
-            b.cofferIcon:SetDesaturated(true)
-            b.cofferIcon:SetAlpha(0.45)
+        if b.bagkeeperIcon then
+            b.bagkeeperIcon:SetDesaturated(true)
+            b.bagkeeperIcon:SetAlpha(0.45)
         end
-        b.cofferFree:SetText("+")
-        b.cofferFree:SetTextColor(P.goldOn[1], P.goldOn[2], P.goldOn[3])
-        b.cofferFree:Show()
+        b.bagkeeperFree:SetText("+")
+        b.bagkeeperFree:SetTextColor(P.goldOn[1], P.goldOn[2], P.goldOn[3])
+        b.bagkeeperFree:Show()
         b:HookScript("OnClick", function() PlaySound(SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION or 857) end)
         b:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -1866,7 +1866,7 @@ local function BuildBankWindow()
             local b = slotButtons[index]
             if not b and not InCombatLockdown() then
                 b = NewLiveButton(slotHolder, index)
-                b.cofferBankSlot = index
+                b.bagkeeperBankSlot = index
                 slotButtons[index] = b
             end
             if b then
@@ -1879,8 +1879,8 @@ local function BuildBankWindow()
             if b then
                 place(b)
                 Dress(b, nil, nil)
-                b.cofferFree:SetText("+")
-                b.cofferFree:Show()
+                b.bagkeeperFree:SetText("+")
+                b.bagkeeperFree:Show()
             end
         end
     end
@@ -1903,8 +1903,8 @@ end
 
 --------------------------------------------------
 -- 10. SETTINGS
--- A window in the chosen theme: the gear in either window, /coffer config, the addon compartment, or
--- Options > AddOns > Coffer. Every change applies at once.
+-- A window in the chosen theme: the gear in either window, /bagkeeper config, the addon compartment, or
+-- Options > AddOns > Bagkeeper. Every change applies at once.
 --------------------------------------------------
 local settings
 
@@ -2029,7 +2029,7 @@ function View:OnColumnsChanged()
 end
 
 local function BuildSettings()
-    local f = CreateFrame("Frame", "CofferSettings", UIParent, "BackdropTemplate")
+    local f = CreateFrame("Frame", "BagkeeperSettings", UIParent, "BackdropTemplate")
     settings = f
     f:SetSize(500, 640)
     RestorePosition(f, db, "settingsPoint", DEFAULTS.settingsPoint)
@@ -2046,7 +2046,7 @@ local function BuildSettings()
         SavePosition(self, db, "settingsPoint")
     end)
     f:Hide()
-    tinsert(UISpecialFrames, "CofferSettings")
+    tinsert(UISpecialFrames, "BagkeeperSettings")
     BuildSkin(f)
     local base = f:GetFrameLevel()
 
@@ -2056,7 +2056,7 @@ local function BuildSettings()
     body:SetFrameLevel(base + 5)
 
     local title = Accent(body:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge"))
-    title:SetText("Coffer Settings")
+    title:SetText("Bagkeeper Settings")
     local close = CreateFrame("Button", nil, body, "UIPanelCloseButton")
     close:SetSize(26, 26)
     close:SetFrameLevel(base + 40)
@@ -2226,24 +2226,24 @@ OpenSettings = function()
 end
 
 -- the addon compartment (TOC) and Options > AddOns
-function Coffer_OpenSettings() OpenSettings() end
+function Bagkeeper_OpenSettings() OpenSettings() end
 
 local function RegisterOptionsEntry()
     if not (Settings and Settings.RegisterCanvasLayoutCategory and Settings.RegisterAddOnCategory) then return end
     local canvas = CreateFrame("Frame")
     local text = canvas:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     text:SetPoint("TOPLEFT", 16, -16)
-    text:SetText("Coffer's settings have their own window.")
+    text:SetText("Bagkeeper's settings have their own window.")
     local open = CreateFrame("Button", nil, canvas, "UIPanelButtonTemplate")
     open:SetSize(180, 24)
     open:SetPoint("TOPLEFT", text, "BOTTOMLEFT", 0, -12)
-    open:SetText("Open Coffer settings")
+    open:SetText("Open Bagkeeper settings")
     -- opens above the game's Options (DIALOG strata); Blizzard's panel is left alone
     open:SetScript("OnClick", function()
         if not settings:IsShown() then OpenSettings() end
     end)
     pcall(function()
-        local category = Settings.RegisterCanvasLayoutCategory(canvas, "Coffer")
+        local category = Settings.RegisterCanvasLayoutCategory(canvas, "Bagkeeper")
         Settings.RegisterAddOnCategory(category)
     end)
 end
@@ -2251,7 +2251,7 @@ end
 --------------------------------------------------
 -- 11. BLIZZARD'S BAG WINDOWS
 -- Blizzard still opens and closes its bags (the B key, the bag buttons, vendors, the mailbox): its
--- windows for Coffer's bags live under a hidden parent and Coffer's bag window follows their state.
+-- windows for Bagkeeper's bags live under a hidden parent and Bagkeeper's bag window follows their state.
 --------------------------------------------------
 local hiddenParent = CreateFrame("Frame")
 hiddenParent:Hide()
@@ -2336,7 +2336,7 @@ local function OnEvent(_, event, ...)
     if event == "PLAYER_LOGIN" then
         LoadDB()
         if C_AddOns.IsAddOnLoaded("Baganator") then
-            print("|cffcc9957Coffer:|r Baganator is enabled, so Coffer stays off. Disable one of the two.")
+            print("|cffcc9957Bagkeeper:|r Baganator is enabled, so Bagkeeper stays off. Disable one of the two.")
             return
         end
         heavyOK = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo("heavybronze-frame-basic") ~= nil or false
@@ -2425,10 +2425,11 @@ end
 events:RegisterEvent("PLAYER_LOGIN")
 events:SetScript("OnEvent", OnEvent)
 
-local function Say(msg) print("|cffcc9957Coffer:|r " .. msg) end
+local function Say(msg) print("|cffcc9957Bagkeeper:|r " .. msg) end
 
-SLASH_COFFER1 = "/coffer"
-SlashCmdList.COFFER = function(msg)
+SLASH_BAGKEEPER1 = "/bagkeeper"
+SLASH_BAGKEEPER2 = "/bk"
+SlashCmdList.BAGKEEPER = function(msg)
     if not bags then Say("not running (is Baganator enabled?)") return end
     local cmd = (msg or ""):lower():match("^(%S*)")
     if cmd == "" then
@@ -2438,8 +2439,8 @@ SlashCmdList.COFFER = function(msg)
     elseif cmd == "config" or cmd == "settings" or cmd == "options" then
         OpenSettings()
     else
-        Say("/coffer - open or close the bags")
-        Say("/coffer bank - open or close the bank (saved copy away from a banker)")
-        Say("/coffer config - settings")
+        Say("/bagkeeper (or /bk) - open or close the bags")
+        Say("/bagkeeper bank - open or close the bank (saved copy away from a banker)")
+        Say("/bagkeeper config - settings")
     end
 end
