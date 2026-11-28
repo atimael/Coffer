@@ -3,7 +3,7 @@
 A bag addon for **WoW Forever**. It sorts your bags into categories in one window that keeps its size, styled like FlareUI.
 
 ## Features
-- **Categories:** Quest, Equipment, Consumables, Trade Goods, Recipes, Bags, Ammo, Keys, Miscellaneous and Junk. Each one can be turned off.
+- **Categories:** Quest, Equipment, Consumables, Trade Goods, Recipes, Bags, Ammo, Keys, Miscellaneous and Junk. Turn one off and its items go to Miscellaneous.
 - **A fixed-size window:** looting, selling and moving items never resize it, and there's no scrolling.
 - **Themes:** FlareUI, Forever, Modern and Blizzard.
 - **Layout settings:** icon size, slot and category spacing, name size, each category on its own row, and boxes, lines or plain.
@@ -15,7 +15,7 @@ A bag addon for **WoW Forever**. It sorts your bags into categories in one windo
 - **Also:** search, item levels on gear, and rarity-colored borders.
 
 ## Install
-Put the `Bagkeeper` folder in `World of Warcraft\_forever_\Interface\AddOns\`, so the path is `AddOns\Bagkeeper\Bagkeeper.toc`. Turn off other bag addons, such as Baganator.
+Put the `Bagkeeper` folder in `World of Warcraft\_forever_\Interface\AddOns\`, so the path is `AddOns\Bagkeeper\Bagkeeper.toc`. Use one bag addon at a time: while Baganator is on, Bagkeeper stays off.
 
 ## Use
 - **B**, `/bagkeeper` or `/bk` opens your bags.
