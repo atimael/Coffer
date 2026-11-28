@@ -1,7 +1,8 @@
 ## Interface: 16001
 ## Title: Bagkeeper
 ## Notes: Category bags in a fixed-size window that never jumps around, styled like FlareUI.
-## Version: 0.1.1
+## Version: @project-version@
+## X-Curse-Project-ID: 1835671
 ## SavedVariables: BagkeeperDB
 ## OptionalDeps: FlareUI
 ## IconTexture: Interface\Icons\INV_Misc_Bag_10

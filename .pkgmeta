@@ -1,0 +1,5 @@
+package-as: Bagkeeper
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
