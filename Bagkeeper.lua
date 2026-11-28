@@ -440,11 +440,39 @@ local function SkinButton(b)
     fade:SetDuration(0.9)
     fade:SetSmoothing("IN_OUT")
     b.bagkeeperNew, b.bagkeeperPulse = glow, pulse
+    -- Search matches: a bright white glow over everything else that swells and fades, quicker
+    -- than the new-item glow so the two never read as the same thing
+    local hit = ov:CreateTexture(nil, "OVERLAY", nil, 3)
+    hit:SetPoint("TOPLEFT", -8, 8)
+    hit:SetPoint("BOTTOMRIGHT", 8, -8)
+    hit:SetAtlas("bags-glow-white")
+    if not hit:GetAtlas() then hit:SetTexture("Interface\\Buttons\\CheckButtonHilight") end
+    hit:SetBlendMode("ADD")
+    hit:Hide()
+    local hitPulse = hit:CreateAnimationGroup()
+    hitPulse:SetLooping("BOUNCE")
+    local hitFade = hitPulse:CreateAnimation("Alpha")
+    hitFade:SetFromAlpha(1)
+    hitFade:SetToAlpha(0.2)
+    hitFade:SetDuration(0.5)
+    hitFade:SetSmoothing("IN_OUT")
+    local hitSwell = hitPulse:CreateAnimation("Scale")
+    if hitSwell.SetScaleFrom then
+        hitSwell:SetScaleFrom(1.1, 1.1)
+        hitSwell:SetScaleTo(0.9, 0.9)
+    else
+        hitSwell:SetScale(0.82, 0.82)
+    end
+    hitSwell:SetDuration(0.5)
+    hitSwell:SetSmoothing("IN_OUT")
+    b.bagkeeperHit, b.bagkeeperHitPulse = hit, hitPulse
     if b.UpdateNewItem then hooksecurefunc(b, "UpdateNewItem", HideBlizzardNew) end
     b:HookScript("OnShow", HideBlizzardNew)
     b:HookScript("OnHide", function(self)
         if self.bagkeeperPulse:IsPlaying() then self.bagkeeperPulse:Stop() end
         self.bagkeeperNew:Hide()
+        self.bagkeeperHitPulse:Stop()
+        self.bagkeeperHit:Hide()
         if GameTooltip:IsOwned(self) then GameTooltip:Hide() end
     end)
     b:HookScript("OnEnter", function(self)
@@ -935,10 +963,16 @@ end
 
 function View:ApplySearch()
     local text = (self.search:GetText() or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
+    local searching = text ~= ""
     for b, entry in pairs(self.shown) do
-        local match = text == "" or entry.lname:find(text, 1, true)
+        local match = not searching or entry.lname:find(text, 1, true)
             or CATEGORY_LABEL[entry.cat]:lower():find(text, 1, true)
         b:SetAlpha(match and 1 or 0.22)
+        -- matches glow and pulse; all of them restart together so they pulse in step
+        local hit = searching and match and true or false
+        b.bagkeeperHit:SetShown(hit)
+        b.bagkeeperHitPulse:Stop()
+        if hit then b.bagkeeperHitPulse:Play() end
     end
 end
 
